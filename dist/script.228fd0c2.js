@@ -103,8 +103,310 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"script.js":[function(require,module,exports) {
+})({"src/Bullet.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Bullet
+// ------
+
+// **new Bullet()** creates a new bullet.
+var Bullet = function () {
+  function Bullet(center, velocity) {
+    _classCallCheck(this, Bullet);
+
+    this.center = center;
+    this.size = { x: 3, y: 3 };
+    this.velocity = velocity;
+    this.color = 'black';
+  }
+
+  // **update()** updates the state of the bullet for a single tick.
+
+
+  _createClass(Bullet, [{
+    key: 'update',
+    value: function update() {
+      // Add velocity to center to move bullet.
+      this.center.x += this.velocity.x;
+      this.center.y += this.velocity.y;
+    }
+  }]);
+
+  return Bullet;
+}();
+
+exports.default = Bullet;
+},{}],"src/Invaders.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Bullet = require('./Bullet');
+
+var _Bullet2 = _interopRequireDefault(_Bullet);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Invaders
+// --------
+
+// **new Invader()** creates an invader.
+var Invader = function () {
+  function Invader(game, center) {
+    _classCallCheck(this, Invader);
+
+    this.game = game;
+    this.center = center;
+    this.size = { x: 15, y: 15 };
+    this.color = 'purple';
+
+    // Invaders patrol from left to right and back again.
+    // `this.patrolX` records the current (relative) position of the
+    // invader in their patrol.  It starts at 0, increases to 40, then
+    // decreases to 0, and so forth.
+    this.patrolX = 0;
+
+    // The x speed of the invader.  A positive value moves the invader
+    // right. A negative value moves it left.
+    this.speedX = 0.3;
+  }
+
+  // **update()** updates the state of the invader for a single tick.
+
+
+  _createClass(Invader, [{
+    key: 'update',
+    value: function update() {
+      // If the invader is outside the bounds of their patrol...
+      if (this.patrolX < 0 || this.patrolX > 30) {
+        // ... reverse direction of movement.
+        this.speedX = -this.speedX;
+      }
+
+      // If coin flip comes up and no friends below in this
+      // invader's column...
+      if (Math.random() > 0.995 && !this.game.invadersBelow(this)) {
+        // ... create a bullet just below the invader that will move
+        // downward...
+        var bullet = new _Bullet2.default({ x: this.center.x, y: this.center.y + this.size.y / 2 }, { x: Math.random() - 0.5, y: 2 });
+
+        // ... and add the bullet to the game.
+        this.game.addBody(bullet);
+      }
+
+      // Move according to current x speed.
+      this.center.x += this.speedX;
+
+      // Update variable that keeps track of current position in patrol.
+      this.patrolX += this.speedX;
+    }
+  }]);
+
+  return Invader;
+}();
+
+exports.default = Invader;
+},{"./Bullet":"src/Bullet.js"}],"src/Constants.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.colliding = exports.drawRect = exports.createInvaders = undefined;
+
+var _Invaders = require('./Invaders');
+
+var _Invaders2 = _interopRequireDefault(_Invaders);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// **createInvaders()** returns an array of twenty-four invaders.
+var createInvaders = exports.createInvaders = function createInvaders(game) {
+  var invaders = [];
+  for (var i = 0; i < 24; i++) {
+    // Place invaders in eight columns.
+    var x = 30 + i % 8 * 30;
+
+    // Place invaders in three rows.
+    var y = 30 + i % 3 * 30;
+
+    // Create invader.
+    invaders.push(new _Invaders2.default(game, { x: x, y: y }));
+  }
+
+  return invaders;
+};
+
+// Other functions
+// ---------------
+
+// **drawRect()** draws passed body as a rectangle to `screen`, the drawing context.
+var drawRect = exports.drawRect = function drawRect(screen, body) {
+  screen.fillStyle = body.color;
+  screen.fillRect(body.center.x - body.size.x / 2, body.center.y - body.size.y / 2, body.size.x, body.size.y);
+};
+
+// **colliding()** returns true if two passed bodies are colliding.
+// The approach is to test for five situations.  If any are true,
+// the bodies are definitely not colliding.  If none of them
+// are true, the bodies are colliding.
+// 1. b1 is the same body as b2.
+// 2. Right of `b1` is to the left of the left of `b2`.
+// 3. Bottom of `b1` is above the top of `b2`.
+// 4. Left of `b1` is to the right of the right of `b2`.
+// 5. Top of `b1` is below the bottom of `b2`.
+var colliding = exports.colliding = function colliding(b1, b2) {
+  return !(b1 === b2 || b1.center.x + b1.size.x / 2 < b2.center.x - b2.size.x / 2 || b1.center.y + b1.size.y / 2 < b2.center.y - b2.size.y / 2 || b1.center.x - b1.size.x / 2 > b2.center.x + b2.size.x / 2 || b1.center.y - b1.size.y / 2 > b2.center.y + b2.size.y / 2);
+};
+},{"./Invaders":"src/Invaders.js"}],"src/Keyboarder.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Keyboard input tracking
+// -----------------------
+
+// **new Keyboarder()** creates a new keyboard input tracking object.
+var Keyboarder = function Keyboarder() {
+  _classCallCheck(this, Keyboarder);
+
+  // Records up/down state of each key that has ever been pressed.
+  var keyState = {};
+
+  // When key goes down, record that it is down.
+  window.addEventListener('keydown', function (e) {
+    keyState[e.keyCode] = true;
+    console.log('key down', e.keyCode);
+  });
+
+  // When key goes up, record that it is up.
+  window.addEventListener('keyup', function (e) {
+    keyState[e.keyCode] = false;
+    console.log('key up', e.keyCode);
+  });
+
+  // Returns true if passed key is currently down.  `keyCode` is a
+  // unique number that represents a particular key on the keyboard.
+  this.isDown = function (keyCode) {
+    return keyState[keyCode] === true;
+  };
+
+  // Handy constants that give keyCodes human-readable names.
+  this.KEYS = { LEFT: 37, RIGHT: 39, S: 83 };
+};
+
+exports.default = Keyboarder;
+},{}],"src/Player.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Keyboarder = require('./Keyboarder');
+
+var _Keyboarder2 = _interopRequireDefault(_Keyboarder);
+
+var _Bullet = require('./Bullet');
+
+var _Bullet2 = _interopRequireDefault(_Bullet);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Player
+// ------
+
+// **new Player()** creates a player.
+var Player = function () {
+  function Player(game, gameSize) {
+    _classCallCheck(this, Player);
+
+    this.game = game;
+    this.size = { x: 15, y: 15 };
+    this.center = { x: gameSize.x / 2, y: gameSize.y - this.size.y * 2 };
+    this.color = 'green';
+
+    // Create a keyboard object to track button presses.
+    this.keyboarder = new _Keyboarder2.default();
+  }
+
+  // **update()** updates the state of the player for a single tick.
+
+
+  _createClass(Player, [{
+    key: 'update',
+    value: function update() {
+      // If left cursor key is down...
+      if (this.keyboarder.isDown(this.keyboarder.KEYS.LEFT)) {
+        // ... move left.
+        this.center.x -= 2;
+      } else if (this.keyboarder.isDown(this.keyboarder.KEYS.RIGHT)) {
+        this.center.x += 2;
+      }
+
+      // If S key is down...
+      if (this.keyboarder.isDown(this.keyboarder.KEYS.S)) {
+        // ... create a bullet just above the player that will move upwards...
+        var bullet = new _Bullet2.default({ x: this.center.x, y: this.center.y - this.size.y - 10 }, { x: 0, y: -7 });
+
+        // ... add the bullet to the game...
+        this.game.addBody(bullet);
+
+        // ... rewind the shoot sound...
+        this.game.shootSound.load();
+
+        // ... and play the shoot sound.
+        this.game.shootSound.play();
+      }
+    }
+  }]);
+
+  return Player;
+}();
+
+exports.default = Player;
+},{"./Keyboarder":"src/Keyboarder.js","./Bullet":"src/Bullet.js"}],"src/Game.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Constants = require('./Constants');
+
+var _Player = require('./Player');
+
+var _Player2 = _interopRequireDefault(_Player);
+
+var _Invaders = require('./Invaders');
+
+var _Invaders2 = _interopRequireDefault(_Invaders);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -129,17 +431,17 @@ var Game = function () {
     // place game bodies.
     var gameSize = { x: canvas.width, y: canvas.height
 
-      //initial score for game
+      // initial score for game
     };this.score = 0;
 
     // Create the bodies array to hold the player, invaders and bullets.
     this.bodies = [];
 
     // Add the invaders to the bodies array.
-    this.bodies = this.bodies.concat(createInvaders(this));
+    this.bodies = this.bodies.concat((0, _Constants.createInvaders)(this));
 
     // Add the player to the bodies array.
-    this.bodies = this.bodies.concat(new Player(this, gameSize));
+    this.bodies = this.bodies.concat(new _Player2.default(this, gameSize));
 
     // In index.html, there is an audio tag that loads the shooting sound.
     // Get the shoot sound from the DOM and store it on the game object.
@@ -179,7 +481,7 @@ var Game = function () {
       // is not colliding with anything.
       var notCollidingWithAnything = function notCollidingWithAnything(b1) {
         return _this2.bodies.filter(function (b2) {
-          return colliding(b1, b2);
+          return (0, _Constants.colliding)(b1, b2);
         }).length === 0;
       };
 
@@ -203,7 +505,7 @@ var Game = function () {
 
       // Draw each body as a rectangle.
       for (var i = 0; i < this.bodies.length; i++) {
-        drawRect(screen, this.bodies[i]);
+        (0, _Constants.drawRect)(screen, this.bodies[i]);
       }
     }
 
@@ -217,7 +519,7 @@ var Game = function () {
       return this.bodies.filter(function (b) {
         // Keep `b` if it is an invader, if it is in the same column
         // as `invader`, and if it is somewhere below `invader`.
-        return b instanceof Invader && Math.abs(invader.center.x - b.center.x) < b.size.x && b.center.y > invader.center.y;
+        return b instanceof _Invaders2.default && Math.abs(invader.center.x - b.center.x) < b.size.x && b.center.y > invader.center.y;
       }).length > 0;
     }
 
@@ -233,235 +535,25 @@ var Game = function () {
   return Game;
 }();
 
-// Invaders
-// --------
+exports.default = Game;
+},{"./Constants":"src/Constants.js","./Player":"src/Player.js","./Invaders":"src/Invaders.js"}],"script.js":[function(require,module,exports) {
+'use strict';
 
-// **new Invader()** creates an invader.
+var _Game = require('./src/Game');
 
+var _Game2 = _interopRequireDefault(_Game);
 
-var Invader = function () {
-  function Invader(game, center) {
-    _classCallCheck(this, Invader);
-
-    this.game = game;
-    this.center = center;
-    this.size = { x: 15, y: 15 };
-    this.color = 'purple';
-
-    // Invaders patrol from left to right and back again.
-    // `this.patrolX` records the current (relative) position of the
-    // invader in their patrol.  It starts at 0, increases to 40, then
-    // decreases to 0, and so forth.
-    this.patrolX = 0;
-
-    // The x speed of the invader.  A positive value moves the invader
-    // right. A negative value moves it left.
-    this.speedX = 0.3;
-  }
-
-  // **update()** updates the state of the invader for a single tick.
-
-
-  _createClass(Invader, [{
-    key: 'update',
-    value: function update() {
-      // If the invader is outside the bounds of their patrol...
-      if (this.patrolX < 0 || this.patrolX > 30) {
-        // ... reverse direction of movement.
-        this.speedX = -this.speedX;
-      }
-
-      // If coin flip comes up and no friends below in this
-      // invader's column...
-      if (Math.random() > 0.995 && !this.game.invadersBelow(this)) {
-        // ... create a bullet just below the invader that will move
-        // downward...
-        var bullet = new Bullet({ x: this.center.x, y: this.center.y + this.size.y / 2 }, { x: Math.random() - 0.5, y: 2 });
-
-        // ... and add the bullet to the game.
-        this.game.addBody(bullet);
-      }
-
-      // Move according to current x speed.
-      this.center.x += this.speedX;
-
-      // Update variable that keeps track of current position in patrol.
-      this.patrolX += this.speedX;
-    }
-  }]);
-
-  return Invader;
-}();
-
-// **createInvaders()** returns an array of twenty-four invaders.
-
-
-var createInvaders = function createInvaders(game) {
-  var invaders = [];
-  for (var i = 0; i < 24; i++) {
-    // Place invaders in eight columns.
-    var x = 30 + i % 8 * 30;
-
-    // Place invaders in three rows.
-    var y = 30 + i % 3 * 30;
-
-    // Create invader.
-    invaders.push(new Invader(game, { x: x, y: y }));
-  }
-
-  return invaders;
-};
-
-// Player
-// ------
-
-// **new Player()** creates a player.
-
-var Player = function () {
-  function Player(game, gameSize) {
-    _classCallCheck(this, Player);
-
-    this.game = game;
-    this.size = { x: 15, y: 15 };
-    this.center = { x: gameSize.x / 2, y: gameSize.y - this.size.y * 2 };
-    this.color = 'green';
-
-    // Create a keyboard object to track button presses.
-    this.keyboarder = new Keyboarder();
-  }
-
-  // **update()** updates the state of the player for a single tick.
-
-
-  _createClass(Player, [{
-    key: 'update',
-    value: function update() {
-      // If left cursor key is down...
-      if (this.keyboarder.isDown(this.keyboarder.KEYS.LEFT)) {
-        // ... move left.
-        this.center.x -= 2;
-      } else if (this.keyboarder.isDown(this.keyboarder.KEYS.RIGHT)) {
-        this.center.x += 2;
-      }
-
-      // If S key is down...
-      if (this.keyboarder.isDown(this.keyboarder.KEYS.S)) {
-        // ... create a bullet just above the player that will move upwards...
-        var bullet = new Bullet({ x: this.center.x, y: this.center.y - this.size.y - 10 }, { x: 0, y: -7 });
-
-        // ... add the bullet to the game...
-        this.game.addBody(bullet);
-
-        // ... rewind the shoot sound...
-        this.game.shootSound.load();
-
-        // ... and play the shoot sound.
-        this.game.shootSound.play();
-      }
-    }
-  }]);
-
-  return Player;
-}();
-
-// Bullet
-// ------
-
-// **new Bullet()** creates a new bullet.
-
-
-var Bullet = function () {
-  function Bullet(center, velocity) {
-    _classCallCheck(this, Bullet);
-
-    this.center = center;
-    this.size = { x: 3, y: 3 };
-    this.velocity = velocity;
-    this.color = 'black';
-  }
-
-  // **update()** updates the state of the bullet for a single tick.
-
-
-  _createClass(Bullet, [{
-    key: 'update',
-    value: function update() {
-      // Add velocity to center to move bullet.
-      this.center.x += this.velocity.x;
-      this.center.y += this.velocity.y;
-    }
-  }]);
-
-  return Bullet;
-}();
-
-// Keyboard input tracking
-// -----------------------
-
-// **new Keyboarder()** creates a new keyboard input tracking object.
-
-
-var Keyboarder = function Keyboarder() {
-  _classCallCheck(this, Keyboarder);
-
-  // Records up/down state of each key that has ever been pressed.
-  var keyState = {};
-
-  // When key goes down, record that it is down.
-  window.addEventListener('keydown', function (e) {
-    keyState[e.keyCode] = true;
-    console.log('key down', e.keyCode);
-  });
-
-  // When key goes up, record that it is up.
-  window.addEventListener('keyup', function (e) {
-    keyState[e.keyCode] = false;
-    console.log('key up', e.keyCode);
-  });
-
-  // Returns true if passed key is currently down.  `keyCode` is a
-  // unique number that represents a particular key on the keyboard.
-  this.isDown = function (keyCode) {
-    return keyState[keyCode] === true;
-  };
-
-  // Handy constants that give keyCodes human-readable names.
-  this.KEYS = { LEFT: 37, RIGHT: 39, S: 83 };
-};
-
-// Other functions
-// ---------------
-
-// **drawRect()** draws passed body as a rectangle to `screen`, the drawing context.
-
-
-var drawRect = function drawRect(screen, body) {
-  screen.fillStyle = body.color;
-  screen.fillRect(body.center.x - body.size.x / 2, body.center.y - body.size.y / 2, body.size.x, body.size.y);
-};
-
-// **colliding()** returns true if two passed bodies are colliding.
-// The approach is to test for five situations.  If any are true,
-// the bodies are definitely not colliding.  If none of them
-// are true, the bodies are colliding.
-// 1. b1 is the same body as b2.
-// 2. Right of `b1` is to the left of the left of `b2`.
-// 3. Bottom of `b1` is above the top of `b2`.
-// 4. Left of `b1` is to the right of the right of `b2`.
-// 5. Top of `b1` is below the bottom of `b2`.
-var colliding = function colliding(b1, b2) {
-  return !(b1 === b2 || b1.center.x + b1.size.x / 2 < b2.center.x - b2.size.x / 2 || b1.center.y + b1.size.y / 2 < b2.center.y - b2.size.y / 2 || b1.center.x - b1.size.x / 2 > b2.center.x + b2.size.x / 2 || b1.center.y - b1.size.y / 2 > b2.center.y + b2.size.y / 2);
-};
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Start game
 // ----------
 
 // When the DOM is ready, create (and start) the game.
 window.addEventListener('load', function () {
-  var game = new Game();
+  var game = new _Game2.default();
   game.start();
-});
-},{}],"../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+}); // import Game class so game can be loaded
+},{"./src/Game":"src/Game.js"}],"../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -490,7 +582,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '61016' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58153' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
