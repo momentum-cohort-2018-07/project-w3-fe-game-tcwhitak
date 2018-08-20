@@ -1,18 +1,25 @@
-# Building A Game in JavaScript
+# Exercise: alter Space Invaders
 
-## Directions
+Form groups of two. Read [script.js](script.js) carefully to understand the code behind this Space Invaders clone. Then, pick one of the following things to change about the game:
 
-For this project, you are going to build a simple game with JavaScript. First, make sure you've [watched this video of Mary Rose Cook building a game from scratch](https://vimeo.com/105955605). Check out [her annotated version of Space Invaders](http://annotated-code.maryrosecook.com/space-invaders/docs/space-invaders.html).
+* Change the color of the invaders and player. The player and the player's bullets should be a different color than the invaders.
+    -added color property to each class and incorporated fill style to drawRect function
 
-Then pick one of the following games:
+* Double the size of the player.
+    -double size for player within class constructor
 
-* [Pixel War](http://www.lessmilk.com/game/pixel-war-1/)
-* [Run](http://www.lessmilk.com/game/run/)
-* [The Square](http://www.lessmilk.com/game/the-square/)
+* Show a score equal to the number of invaders hit.
+    -add starting score variable to game constructor
+    -create array with invaders that have collided
+    -add number of invaders collided to score
+    -draw score in game draw method
+* Put a limit on the number of bullets allowed on the screen at once.
+* Put a limit on the number of bullets the player can fire at once.
+* Fix the sound played when firing to play when you release the key, not while it is down.
+* Start the game paused, and press any key to begin.
+* Show a game over screen when the player is hit, and press any key to restart.
+* Every X ticks -- the number of ticks are up to you -- push all invaders down one row and add a new row to the top of the board. Alternately, use `setTimeout` to make this happen every X milliseconds.
 
-Your job is to implement this game in JavaScript. You can use external libraries, but nothing that would be considered a game framework. Your game must use JavaScript classes/prototypes and objects.
+## Parcel
 
-## Additional resources
-
-* [Game project from _Eloquent JavaScript_](https://eloquentjavascript.net/3rd_edition/16_game.html)
-* [Lessmilk Game Tutorials](http://www.lessmilk.com/)
+Use Parcel to build the game. When you have this working, put each class in its own file under the `src/` directory.

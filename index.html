@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Game Project</title>
+  <title>Space Invaders</title>
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="game">
-    <canvas id="game-canvas" width="800" height="600"></canvas>
-    </div>
-    <script src="keyboarder.js" defer></script>
-    <script src="pong.js" defer></script>
+  <audio id="shoot-sound" src="shoot.mp3"></audio>
+  <div style="width:500px; margin: 30px auto;">
+    <canvas id="space-invaders" width="500" height="500"></canvas>
+    <p style="text-align:center">Move with the arrow keys. Shoot with the S key. Refresh to play again.</p>
+  </div>
 </body>
 </html>
